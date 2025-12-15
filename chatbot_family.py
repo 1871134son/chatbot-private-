@@ -7,7 +7,7 @@ import os
 # 1. 페이지 설정 (무조건 맨 위!)
 # ==========================================
 st.set_page_config(
-    page_title="우리 가족 사랑방 🏠", page_icon="👨‍👩‍👦‍👦", layout="centered"
+    page_title="우리 가족 AI 상담소 🏠", page_icon="👨‍👩‍👦‍👦", layout="centered"
 )
 
 # ==========================================
@@ -53,7 +53,7 @@ def find_best_model():
 
 
 # ==========================================
-# 4. [핵심] 배경 및 강제 라이트 모드 스타일
+# 4. [핵심] 배경 및 스타일 (글씨 검은색 강제)
 # ==========================================
 @st.cache_data
 def get_base64_image(image_file):
@@ -77,6 +77,7 @@ def set_bg(image_file):
     <style>
     /* [1] 앱 전체 강제 라이트 모드 (다크 모드 무시) */
     :root {{
+        color-scheme: light only !important; /* 브라우저에게 라이트모드 강요 */
         --primary-color: #ff4b4b;
         --background-color: #ffffff;
         --secondary-background-color: #f0f2f6;
@@ -84,8 +85,8 @@ def set_bg(image_file):
         --font: sans-serif;
     }}
     
-    /* [2] 전체 배경 흰색 고정 (회색 방지) */
-    .stApp {{
+    /* [2] 전체 배경 흰색 고정 */
+    [data-testid="stAppViewContainer"] {{
         background-color: #ffffff !important;
         background-image: linear-gradient(rgba(255,255,255,0.6), rgba(255,255,255,0.6)), {bg_img_css};
         background-size: 50%; /* 이미지 크기 */
@@ -93,20 +94,31 @@ def set_bg(image_file):
         background-repeat: no-repeat;
         background-attachment: fixed;
     }}
-
-    /* [3] 채팅 말풍선 스타일 (흰 배경 + 검은 글씨) */
-    [data-testid="stChatMessage"] {{
-        background-color: #f0f2f6 !important; /* 연한 회색 말풍선 */
-        border: 1px solid #d0d0d0;
-        border-radius: 15px;
-        padding: 15px;
-        color: #000000 !important; /* 글씨 색 기본 지정 */
+    
+    .stApp {{
+        background-color: #ffffff !important;
+        color: #000000 !important;
     }}
 
-    /* [4] 말풍선 안의 모~든 글자를 강제로 검은색으로 (핵심) */
-    [data-testid="stChatMessage"] * {{
+    /* [3] 채팅 말풍선 배경 (연한 회색) */
+    [data-testid="stChatMessage"] {{
+        background-color: #f1f3f4 !important; /* 구글 스타일 연회색 */
+        border: 1px solid #dbdbdb;
+        border-radius: 15px;
+        padding: 15px;
+    }}
+
+    /* [4] 말풍선 안의 글씨: 무조건 검은색 (여기가 핵심!) */
+    [data-testid="stChatMessage"] p,
+    [data-testid="stChatMessage"] div,
+    [data-testid="stChatMessage"] span,
+    [data-testid="stChatMessage"] li,
+    [data-testid="stChatMessage"] h1,
+    [data-testid="stChatMessage"] h2,
+    [data-testid="stChatMessage"] h3 {{
         color: #000000 !important;
         -webkit-text-fill-color: #000000 !important; /* 모바일 크롬 강제 적용 */
+        font-weight: 500 !important; /* 글씨 약간 굵게 */
     }}
 
     /* [5] 입력창 스타일 */
