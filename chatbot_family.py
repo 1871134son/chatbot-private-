@@ -3,14 +3,18 @@ import google.generativeai as genai
 import base64
 import os
 
+# ==========================================
 # 1. 페이지 설정
+# ==========================================
 st.set_page_config(
     page_title="우리 가족 사랑방 🏠",
     page_icon="👨‍👩‍👦‍👦",
     layout="centered"
 )
 
+# ==========================================
 # 2. API 키 설정
+# ==========================================
 if "MY_API_KEY" in st.secrets:
     MY_API_KEY = st.secrets["MY_API_KEY"]
 else:
@@ -19,7 +23,9 @@ else:
 
 genai.configure(api_key=MY_API_KEY)
 
-# 3. 모델 찾기 (캐싱)
+# ==========================================
+# 3. 모델 자동 찾기
+# ==========================================
 @st.cache_resource
 def find_best_model():
     try:
@@ -46,7 +52,9 @@ def find_best_model():
     except:
         return None
 
-# 4. 배경 및 스타일 설정 (여기가 핵심 수정!)
+# ==========================================
+# 4. 배경 및 스타일 설정 (여기가 핵심!)
+# ==========================================
 @st.cache_data
 def get_base64_image(image_file):
     if not os.path.exists(image_file):
@@ -61,6 +69,14 @@ def set_bg(image_file):
 
     page_bg_img = f'''
     <style>
+    /* [핵심] 브라우저에게 "이 사이트는 라이트 모드야!"라고 강제 선언 */
+    :root {{
+        color-scheme: light !important;
+        --text-color: #000000 !important;
+        --body-text-color: #000000 !important;
+    }}
+    
+    /* 전체 배경 설정 */
     [data-testid="stAppViewContainer"] {{
         {bg_style}
         background-size: 50%;
@@ -69,42 +85,43 @@ def set_bg(image_file):
         background-attachment: fixed;
     }}
     
-    /* [핵심] 채팅 말풍선: 무조건 흰색 배경에 검은 글씨 */
-    [data-testid="stChatMessage"] {{
-        background-color: #ffffff !important; /* 배경은 완전 흰색 */
-        border: 1px solid #e0e0e0 !important; /* 테두리 살짝 */
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    /* 채팅 메시지 박스 */
+    .stChatMessage {{
+        background-color: rgba(255, 255, 255, 0.95) !important; /* 배경 흰색 */
+        border: 1px solid #ddd;
         border-radius: 15px;
+        padding: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }}
 
-    /* [초강력 수정] 말풍선 안의 모든 요소를 강제로 검은색으로 고정 */
-    [data-testid="stChatMessage"] * {{
-        color: #000000 !important; /* 일반 글씨 검은색 */
-        -webkit-text-fill-color: #000000 !important; /* 모바일 브라우저 강제 색칠 방지 */
+    /* [강제] 모든 글자를 검은색으로 */
+    .stChatMessage p, .stChatMessage div, .stChatMessage span, .stChatMessage li {{
+        color: #000000 !important;
+        font-family: sans-serif;
+        font-weight: 500;
+        line-height: 1.6;
     }}
 
-    /* [안전장치] 혹시 몰라 태그별로 한 번 더 지정 */
-    [data-testid="stChatMessage"] p, 
-    [data-testid="stChatMessage"] div, 
-    [data-testid="stChatMessage"] span, 
-    [data-testid="stChatMessage"] li {{
+    /* 유저 이름, 봇 이름 */
+    .stChatMessage .stMarkdown h1, .stChatMessage .stMarkdown h2, .stChatMessage .stMarkdown h3, 
+    [data-testid="stChatMessageAvatar"] + div {{
         color: #000000 !important;
     }}
-    
-    /* 사용자 이름(아이콘 옆)도 검게 */
-    [data-testid="stChatMessage"] .stMarkdown h1, 
-    [data-testid="stChatMessage"] .stMarkdown h2, 
-    [data-testid="stChatMessage"] .stMarkdown h3 {{
-        color: #000000 !important;
+
+    /* 모바일 브라우저 텍스트 채우기 강제 설정 */
+    * {{
+        -webkit-text-fill-color: initial !important; 
     }}
-    
-    /* 입력창 글씨 설정 */
-    .stChatInput textarea {{
-        color: #000000 !important;
+    .stChatMessage * {{
         -webkit-text-fill-color: #000000 !important;
-        caret-color: #000000 !important; /* 커서 깜빡임도 검게 */
     }}
 
+    /* 입력창 스타일 */
+    .stChatInput textarea {{
+        background-color: #ffffff !important;
+        color: #000000 !important;
+    }}
+    
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     </style>
@@ -113,7 +130,9 @@ def set_bg(image_file):
 
 set_bg('family.jpg') 
 
+# ==========================================
 # 5. 사이드바
+# ==========================================
 with st.sidebar:
     st.title("👨‍👩‍👦‍👦 가족 선택")
     selected_user = st.radio(
@@ -127,13 +146,15 @@ user_name = selected_user.split('(')[1].replace(')', '')
 def get_system_instruction(user):
     base = "너는 이 가족을 끔찍이 아끼는 AI 비서야. 한국어로 따뜻하게 대답해."
     if "손기혁" in user:
-        return base + " (대상: 손기혁님 - 71년생 부친, 국방과학연구소, 암투병, 시 문학, 존댓말)"
+        return base + " (대상: 손기혁님 - 71년생 부친, 국방과학연구소, 암투병, 시 문학, 존댓말, 감성적, 위로를 잘 해주는, 고민을 잘 들어주는)"
     elif "김영숙" in user:
-        return base + " (대상: 김영숙님 - 71년생 모친, 어린이집 교사, 감수성, 요리/건강, 공감 대화)"
+        return base + " (대상: 김영숙님 - 71년생 모친, 어린이집 교사, 감수성, 요리/건강, 공감 대화, 감성적, 위로를 잘 해주는, 고민을 잘 들어주는)"
     else:
-        return base + " (대상: 손준호님 - 03년생 남동생, 보안전공, 재테크, 멘탈케어, 반존대)"
+        return base + " (대상: 손준호님 - 03년생 남동생, 보안전공, 재테크, 멘탈케어, 반존대, 감성적, 위로를 잘 해주는, 고민을 잘 들어주는)"
 
+# ==========================================
 # 6. 채팅 로직
+# ==========================================
 if "current_user" not in st.session_state:
     st.session_state.current_user = selected_user
 
@@ -156,7 +177,9 @@ if "chat_session" not in st.session_state or st.session_state.chat_session is No
     else:
         st.error("모델 연결 실패")
 
+# ==========================================
 # 7. 화면 출력
+# ==========================================
 st.title(f"{user_name}님 전용 상담소 💬")
 
 for message in st.session_state.messages:
