@@ -82,7 +82,7 @@ def set_bg(image_file):
     st.markdown(page_bg_img, unsafe_allow_html=True)
 
 # ▼▼▼ [중요] 여기 이름을 지호님이 올린 파일명으로 꼭 바꾸세요! ▼▼▼
-set_bg('여기에_진짜_파일이름.jpg') 
+set_bg('bg.jpg') 
 # ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 # 5. AI 성격 설정 (여자친구 페르소나)
