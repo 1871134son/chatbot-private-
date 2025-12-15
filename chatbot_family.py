@@ -24,7 +24,7 @@ else:
 genai.configure(api_key=MY_API_KEY)
 
 # ==========================================
-# 3. 모델 자동 찾기
+# 3. 모델 찾기 (캐싱)
 # ==========================================
 @st.cache_resource
 def find_best_model():
@@ -65,70 +65,64 @@ def get_base64_image(image_file):
 
 def set_bg(image_file):
     b64 = get_base64_image(image_file)
-    bg_style = f'background-image: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)), url("data:image/jpeg;base64,{b64}");' if b64 else 'background-color: #f0f2f6;'
+    # 이미지가 있으면 배경으로, 없으면 그냥 흰색(#ffffff)
+    bg_style = f'background-image: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.7)), url("data:image/jpeg;base64,{b64}");' if b64 else 'background-color: #ffffff;'
 
     page_bg_img = f'''
     <style>
-    /* [핵심] 브라우저에게 "이 사이트는 라이트 모드야!"라고 강제 선언 */
-    :root {{
-        color-scheme: light !important;
-        --text-color: #000000 !important;
-        --body-text-color: #000000 !important;
-    }}
-    
-    /* 전체 배경 설정 */
-    [data-testid="stAppViewContainer"] {{
-        {bg_style}
-        background-size: 50%;
-        background-position: center center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-    }}
-    
-    /* 채팅 메시지 박스 */
-    .stChatMessage {{
-        background-color: rgba(255, 255, 255, 0.95) !important; /* 배경 흰색 */
-        border: 1px solid #ddd;
-        border-radius: 15px;
-        padding: 15px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }}
-
-    /* [강제] 모든 글자를 검은색으로 */
-    .stChatMessage p, .stChatMessage div, .stChatMessage span, .stChatMessage li {{
-        color: #000000 !important;
-        font-family: sans-serif;
-        font-weight: 500;
-        line-height: 1.6;
-    }}
-
-    /* 유저 이름, 봇 이름 */
-    .stChatMessage .stMarkdown h1, .stChatMessage .stMarkdown h2, .stChatMessage .stMarkdown h3, 
-    [data-testid="stChatMessageAvatar"] + div {{
-        color: #000000 !important;
-    }}
-
-    /* 모바일 브라우저 텍스트 채우기 강제 설정 */
-    * {{
-        -webkit-text-fill-color: initial !important; 
-    }}
-    .stChatMessage * {{
-        -webkit-text-fill-color: #000000 !important;
-    }}
-
-    /* 입력창 스타일 */
-    .stChatInput textarea {{
+    /* [핵심 1] 앱 전체 배경을 강제로 흰색으로 고정 (다크모드 무시) */
+    .stApp {{
         background-color: #ffffff !important;
         color: #000000 !important;
     }}
     
+    [data-testid="stAppViewContainer"] {{
+        {bg_style}
+        background-size: cover; /* 모바일에서 꽉 차게 */
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }}
+    
+    /* [핵심 2] 채팅 메시지 박스 스타일 */
+    [data-testid="stChatMessage"] {{
+        background-color: rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid #ddd !important;
+        border-radius: 15px;
+        color: #000000 !important;
+    }}
+    
+    /* [핵심 3] 말풍선 안의 모든 글자 강제 검은색 (중요!) */
+    [data-testid="stChatMessage"] * {{
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important; /* 아이폰/갤럭시 강제 색칠 방지 */
+    }}
+
+    /* 유저 이름, 봇 이름 */
+    [data-testid="stChatMessageAvatar"] + div, 
+    [data-testid="stChatMessageAvatar"] + div span {{
+        color: #000000 !important;
+    }}
+    
+    /* 입력창 스타일 */
+    .stChatInput textarea {{
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
+    }}
+    
+    /* 헤더 숨기기 */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
+    header {{visibility: hidden;}}
     </style>
     '''
     st.markdown(page_bg_img, unsafe_allow_html=True)
 
-set_bg('family.jpg') 
+# [중요] 깃허브 파일 목록(2번째 사진)에 보이는 이름 그대로 적어야 합니다!
+# bg.jfif 파일이 있다면 그걸 쓰시고, bg.jpg.jfif라면 아래처럼 쓰세요.
+# 둘 중 확실한 파일 이름을 골라 쓰세요. (일단 bg.jfif로 시도 추천)
+set_bg('bg.jfif') 
 
 # ==========================================
 # 5. 사이드바
@@ -146,11 +140,11 @@ user_name = selected_user.split('(')[1].replace(')', '')
 def get_system_instruction(user):
     base = "너는 이 가족을 끔찍이 아끼는 AI 비서야. 한국어로 따뜻하게 대답해."
     if "손기혁" in user:
-        return base + " (대상: 손기혁님 - 71년생 부친, 국방과학연구소, 암투병, 시 문학, 존댓말, 감성적, 위로를 잘 해주는, 고민을 잘 들어주는)"
+        return base + " (대상: 손기혁님 - 71년생 부친, 국방과학연구소, 암투병, 시 문학, 존댓말)"
     elif "김영숙" in user:
-        return base + " (대상: 김영숙님 - 71년생 모친, 어린이집 교사, 감수성, 요리/건강, 공감 대화, 감성적, 위로를 잘 해주는, 고민을 잘 들어주는)"
+        return base + " (대상: 김영숙님 - 71년생 모친, 어린이집 교사, 감수성, 요리/건강, 공감 대화)"
     else:
-        return base + " (대상: 손준호님 - 03년생 남동생, 보안전공, 재테크, 멘탈케어, 반존대, 감성적, 위로를 잘 해주는, 고민을 잘 들어주는)"
+        return base + " (대상: 손준호님 - 03년생 남동생, 보안전공, 재테크, 멘탈케어, 반존대)"
 
 # ==========================================
 # 6. 채팅 로직
